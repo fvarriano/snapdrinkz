@@ -9,7 +9,6 @@ const getEnvVar = (name: string): string => {
 export const ENV = {
   SUPABASE_URL: getEnvVar('SUPABASE_URL'),
   SUPABASE_ANON_KEY: getEnvVar('SUPABASE_ANON_KEY'),
-  OPENAI_API_KEY: getEnvVar('OPENAI_API_KEY'),
   GOOGLE_CLOUD_API_KEY: getEnvVar('GOOGLE_CLOUD_API_KEY'),
 } as const;
 

@@ -18,10 +18,10 @@ A mobile application that helps users discover and create cocktails through AI-p
 2. **Image Capture & Analysis**
    - Camera integration
    - Image capture functionality
-   - OpenAI Vision API integration for ingredient recognition
+   - Google Cloud Vision API integration for ingredient recognition
 
 3. **Recipe Generation**
-   - OpenAI API integration for recipe generation
+   - Recipe matching based on detected ingredients
    - Basic recipe display
    - Save functionality
 
@@ -40,11 +40,11 @@ A mobile application that helps users discover and create cocktails through AI-p
      - SUPABASE_URL
      - SUPABASE_ANON_KEY
 
-2. **OpenAI**
-   - Image analysis and recipe generation
-   - Get API key at: https://platform.openai.com
+2. **Google Cloud**
+   - Image analysis for bottle detection
+   - Get API key at: https://console.cloud.google.com
    - Required key:
-     - OPENAI_API_KEY
+     - GOOGLE_CLOUD_API_KEY
 
 ## Environment Setup
 
@@ -52,7 +52,7 @@ A mobile application that helps users discover and create cocktails through AI-p
 ```env
 EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-EXPO_PUBLIC_OPENAI_API_KEY=your_openai_api_key
+EXPO_PUBLIC_GOOGLE_CLOUD_API_KEY=your_google_cloud_api_key
 ```
 
 2. Install dependencies:
@@ -95,10 +95,9 @@ Snapdrinks is an innovative mobile application that revolutionizes the home bart
 
 - **Frontend**: Next.js
 - **Mobile Framework**: Expo
-- **Image Recognition**: OpenAI/Cursor API
-- **Authentication**: Clerk
-- **Database**: supabase
-
+- **Image Recognition**: Google Cloud Vision API
+- **Authentication**: Supabase
+- **Database**: Supabase
 
 ## 🎯 Roadmap
 
@@ -139,25 +138,16 @@ const fetchOpenAIResponse = async (prompt) => {
 };
 ```
 
-
-
-
 ### 4. Additional Suggestions
-
 
 - **Testing**: Set up a testing framework like Jest or Mocha for unit tests.
 - **Linting**: Consider integrating ESLint for code quality and consistency.
 - **Documentation**: Ensure your code is well-documented, and consider using tools like Storybook for UI components.
 - **Environment Configuration**: Verify environment variables and ensure local setups match production configurations.
 
-
-
-
 ## 🔮 Future Enhancements
 
 - **Smart Shopping Lists**: Generate shopping lists based on desired cocktails
-To enhance the roadmap section of your project's README file, let's create a detailed step-by-step guide for setting up the app, setting up Expo, and integrating with OpenAI. Below is a suggested roadmap with additional recommendations:
-
 
 ---
 
