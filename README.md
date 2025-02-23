@@ -1,51 +1,164 @@
-# Welcome to your Expo app 👋
+# SnapDrinkz
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile application that helps users discover and create cocktails through AI-powered image recognition and recipe generation.
 
-## Get started
+## Development Philosophy
 
-1. Install dependencies
+- **Simplicity First**: Each feature is implemented methodically and thoroughly before moving to the next
+- **Step-by-Step Development**: Clear progression from basic functionality to advanced features
+- **Quality Over Quantity**: Focus on perfecting core features rather than implementing many features partially
 
-   ```bash
-   npm install
-   ```
+## Core Features (Implementation Order)
 
-2. Start the app
+1. **Basic Setup & Authentication**
+   - Expo + Next.js environment
+   - Supabase authentication
+   - Basic user profile
 
-   ```bash
-    npx expo start
-   ```
+2. **Image Capture & Analysis**
+   - Camera integration
+   - Image capture functionality
+   - OpenAI Vision API integration for ingredient recognition
 
-In the output, you'll find options to open the app in a
+3. **Recipe Generation**
+   - OpenAI API integration for recipe generation
+   - Basic recipe display
+   - Save functionality
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+4. **User Features**
+   - Save favorite recipes
+   - View history
+   - Share recipes
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Technical Requirements
 
-## Get a fresh project
+### API Keys Required
+1. **Supabase**
+   - Database and authentication
+   - Create project at: https://supabase.com
+   - Required keys:
+     - SUPABASE_URL
+     - SUPABASE_ANON_KEY
 
-When you're ready, run:
+2. **OpenAI**
+   - Image analysis and recipe generation
+   - Get API key at: https://platform.openai.com
+   - Required key:
+     - OPENAI_API_KEY
 
-```bash
-npm run reset-project
+## Environment Setup
+
+1. Create a `.env` file in the root directory:
+```env
+EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+EXPO_PUBLIC_OPENAI_API_KEY=your_openai_api_key
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+2. Install dependencies:
+```bash
+npm install
+```
 
-## Learn more
+3. Start the development server:
+```bash
+npm run start
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+## Development Status
+- [x] Basic Expo + Next.js setup
+- [ ] Environment configuration
+- [ ] API integration
+- [ ] Core features implementation
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Contributing
+Please follow the step-by-step implementation approach. Each feature should be fully functional before moving to the next.
 
-## Join the community
+# 🍸 Snapdrinks
 
-Join our community of developers creating universal apps.
+Turn your bottle collection into endless cocktail possibilities with AI-powered drink suggestions.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-# snapdrinkz
+## 📱 About
+
+Snapdrinks is an innovative mobile application that revolutionizes the home bartending experience. Simply snap a picture of your alcohol bottles, and let our AI identify them to suggest delicious cocktail combinations you can make right now.
+
+## ✨ Features
+
+- 📸 **Instant Bottle Recognition**: Take a photo or upload an image of your bottles
+- 🤖 **AI-Powered Analysis**: Advanced image recognition to identify alcohol types and brands
+- 🍹 **Smart Cocktail Suggestions**: Get personalized drink recommendations based on your available ingredients
+- ⭐ **Favorites & Custom Recipes**: Save your preferred drinks and create your own recipes
+- 🌟 **Social Sharing**: Connect with friends and share your mixology creations
+- 📱 **Cross-Platform**: Available on both iOS and Android through Expo
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Next.js
+- **Mobile Framework**: Expo
+- **Image Recognition**: OpenAI/Cursor API
+- **Authentication**: Clerk
+- **Database**: supabase
+
+
+## 🎯 Roadmap
+
+### 3. Integration with OpenAI
+
+#### Step 1: Set Up OpenAI API Key
+- Sign up at [OpenAI](https://www.openai.com/) and create an API key if you haven't done so already.
+- Create a `.env` file in your project root and add your API key:
+  ```plaintext
+  OPENAI_API_KEY=your_openai_api_key
+  ```
+
+#### Step 2: Install Axios
+- OpenAI API calls can be made using Axios. Install it running:
+  ```bash
+  npm install axios
+  ```
+
+#### Step 3: Create API Call Functions
+1. Create a new file for API functions (e.g., `api.js`) in the `src` folder.
+2. Write functions to interact with OpenAI's API.
+
+Example code snippet for the API call:
+```javascript
+import axios from 'axios';
+
+const fetchOpenAIResponse = async (prompt) => {
+    const response = await axios.post('https://api.openai.com/v1/engines/text-davinci-003/completions', {
+        prompt: prompt,
+        max_tokens: 50
+    }, {
+        headers: {
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+            'Content-Type': 'application/json'
+        }
+    });
+    return response.data.choices[0].text;
+};
+```
+
+
+
+
+### 4. Additional Suggestions
+
+
+- **Testing**: Set up a testing framework like Jest or Mocha for unit tests.
+- **Linting**: Consider integrating ESLint for code quality and consistency.
+- **Documentation**: Ensure your code is well-documented, and consider using tools like Storybook for UI components.
+- **Environment Configuration**: Verify environment variables and ensure local setups match production configurations.
+
+
+
+
+## 🔮 Future Enhancements
+
+- **Smart Shopping Lists**: Generate shopping lists based on desired cocktails
+To enhance the roadmap section of your project's README file, let's create a detailed step-by-step guide for setting up the app, setting up Expo, and integrating with OpenAI. Below is a suggested roadmap with additional recommendations:
+
+
+---
+
+Made with 🍸 by [Your Team Name] 
