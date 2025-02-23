@@ -101,49 +101,34 @@ Snapdrinks is an innovative mobile application that revolutionizes the home bart
 
 ## 🎯 Roadmap
 
-### 3. Integration with OpenAI
+### 1. Setup and Configuration
+- Set up development environment
+- Configure authentication
+- Set up Google Cloud Vision API
 
-#### Step 1: Set Up OpenAI API Key
-- Sign up at [OpenAI](https://www.openai.com/) and create an API key if you haven't done so already.
-- Create a `.env` file in your project root and add your API key:
-  ```plaintext
-  OPENAI_API_KEY=your_openai_api_key
-  ```
+### 2. Core Features
+- Implement camera functionality
+- Integrate Google Cloud Vision for bottle detection
+- Create cocktail recipe matching system
+- Build user interface for results
 
-#### Step 2: Install Axios
-- OpenAI API calls can be made using Axios. Install it running:
-  ```bash
-  npm install axios
-  ```
+### 3. User Experience
+- Add loading states and error handling
+- Implement smooth navigation
+- Add animation and transitions
+- Polish UI/UX
 
-#### Step 3: Create API Call Functions
-1. Create a new file for API functions (e.g., `api.js`) in the `src` folder.
-2. Write functions to interact with OpenAI's API.
+### 4. Additional Features
+- Save favorite recipes
+- Share functionality
+- User profiles
+- Recipe collections
 
-Example code snippet for the API call:
-```javascript
-import axios from 'axios';
-
-const fetchOpenAIResponse = async (prompt) => {
-    const response = await axios.post('https://api.openai.com/v1/engines/text-davinci-003/completions', {
-        prompt: prompt,
-        max_tokens: 50
-    }, {
-        headers: {
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-            'Content-Type': 'application/json'
-        }
-    });
-    return response.data.choices[0].text;
-};
-```
-
-### 4. Additional Suggestions
-
-- **Testing**: Set up a testing framework like Jest or Mocha for unit tests.
-- **Linting**: Consider integrating ESLint for code quality and consistency.
-- **Documentation**: Ensure your code is well-documented, and consider using tools like Storybook for UI components.
-- **Environment Configuration**: Verify environment variables and ensure local setups match production configurations.
+### 5. Testing and Documentation
+- Unit tests with Jest
+- Integration tests
+- User documentation
+- API documentation
 
 ## 🔮 Future Enhancements
 
