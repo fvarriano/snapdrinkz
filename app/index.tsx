@@ -1,8 +1,14 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect } from 'react';
 import { router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import Screen from './components/Screen';
+import Text from './components/Typography';
+import Button from './components/Button';
+import LoadingIndicator from './components/LoadingIndicator';
+import theme from './styles/theme';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function HomeScreen() {
   const { session, signOut, loading } = useAuth();
@@ -15,9 +21,11 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.text}>Loading...</Text>
-      </View>
+      <Screen>
+        <View style={styles.loadingContainer}>
+          <LoadingIndicator text="Loading..." />
+        </View>
+      </Screen>
     );
   }
 
@@ -26,81 +34,109 @@ export default function HomeScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to SnapDrinkz!</Text>
-      <Text style={styles.subtitle}>Signed in as: {session.user.email}</Text>
-      
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity 
-          style={styles.button}
-          onPress={() => router.replace('/camera')}
+    <Screen>
+      <LinearGradient
+        colors={theme.colors.gradients.primary}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.logoContainer}>
+          <MaterialIcons
+            name="local-bar"
+            size={64}
+            color={theme.colors.text.primary}
+          />
+        </View>
+        <Text variant="h1" center style={styles.title}>
+          Welcome to SnapDrinkz!
+        </Text>
+        <Text
+          variant="body"
+          color="secondary"
+          center
+          style={styles.subtitle}
         >
-          <MaterialIcons name="camera-alt" size={24} color="white" />
-          <Text style={styles.buttonText}>Take a Photo</Text>
-        </TouchableOpacity>
+          Turn your bottles into amazing cocktails
+        </Text>
+      </LinearGradient>
 
-        <TouchableOpacity 
-          style={[styles.button, styles.signOutButton]}
-          onPress={async () => {
-            try {
-              await signOut();
-              router.replace('/auth/sign-in');
-            } catch (error) {
-              console.error('Error signing out:', error);
-            }
-          }}
-        >
-          <MaterialIcons name="logout" size={24} color="white" />
-          <Text style={styles.buttonText}>Sign Out</Text>
-        </TouchableOpacity>
+      <View style={styles.content}>
+        <Text variant="caption" color="secondary" style={styles.email}>
+          Signed in as: {session.user.email}
+        </Text>
+
+        <View style={styles.buttonContainer}>
+          <Button
+            title="Take a Photo"
+            icon="camera-alt"
+            onPress={() => router.replace('/camera')}
+            gradient
+            size="large"
+          />
+
+          <Button
+            title="Sign Out"
+            icon="logout"
+            variant="outline"
+            onPress={async () => {
+              try {
+                await signOut();
+                router.replace('/auth/sign-in');
+              } catch (error) {
+                console.error('Error signing out:', error);
+              }
+            }}
+            style={styles.signOutButton}
+          />
+        </View>
       </View>
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loadingContainer: {
     flex: 1,
-    backgroundColor: 'black',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+  },
+  header: {
+    paddingVertical: theme.spacing.xxl,
+    marginHorizontal: -theme.layout.screenPadding,
+    paddingHorizontal: theme.layout.screenPadding,
+    borderBottomLeftRadius: theme.borderRadius.xxl,
+    borderBottomRightRadius: theme.borderRadius.xxl,
+    ...theme.shadows.large,
+  },
+  logoContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: theme.borderRadius.round,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginBottom: theme.spacing.lg,
+    ...theme.shadows.medium,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 10,
+    marginBottom: theme.spacing.sm,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 40,
+    opacity: 0.8,
   },
-  text: {
-    color: 'white',
-    fontSize: 16,
+  content: {
+    flex: 1,
+    paddingTop: theme.spacing.xl,
+  },
+  email: {
+    marginBottom: theme.spacing.xl,
   },
   buttonContainer: {
-    width: '100%',
-    maxWidth: 300,
-    gap: 20,
-  },
-  button: {
-    backgroundColor: '#4a90e2',
-    padding: 15,
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
+    gap: theme.spacing.lg,
   },
   signOutButton: {
-    backgroundColor: '#e25c5c',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+    marginTop: theme.spacing.md,
   },
 }); 

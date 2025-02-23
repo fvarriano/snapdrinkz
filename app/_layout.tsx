@@ -1,16 +1,54 @@
 import { Stack } from 'expo-router';
 import { AuthProvider } from '../contexts/AuthContext';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import theme from './styles/theme';
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="camera" />
-        <Stack.Screen name="results" />
-        <Stack.Screen name="auth/sign-in" />
-        <Stack.Screen name="auth/sign-up" />
-      </Stack>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: {
+              backgroundColor: theme.colors.background.dark,
+            },
+            animation: 'fade',
+          }}
+        >
+          <Stack.Screen
+            name="index"
+            options={{
+              animation: 'fade',
+            }}
+          />
+          <Stack.Screen
+            name="camera"
+            options={{
+              presentation: 'modal',
+              animation: 'slide_from_bottom',
+            }}
+          />
+          <Stack.Screen
+            name="results"
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="auth/sign-in"
+            options={{
+              animation: 'fade',
+            }}
+          />
+          <Stack.Screen
+            name="auth/sign-up"
+            options={{
+              animation: 'slide_from_right',
+            }}
+          />
+        </Stack>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

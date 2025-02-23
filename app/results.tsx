@@ -1,9 +1,19 @@
-import { View, Text, StyleSheet, Image, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, Image } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { analyzeImage } from '../lib/googleVision';
 import { findCocktails } from '../lib/cocktails';
-import { MaterialIcons } from '@expo/vector-icons';
+import Screen from './components/Screen';
+import Text from './components/Typography';
+import Button from './components/Button';
+import Card from './components/Card';
+import LoadingIndicator from './components/LoadingIndicator';
+import theme from './styles/theme';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+
+const AnimatedCard = Animated.createAnimatedComponent(Card);
 
 type ResultsParams = {
   imageUri: string;
@@ -62,195 +72,228 @@ export default function ResultsScreen() {
   }, [params.imageBase64]);
 
   return (
-    <ScrollView style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/')}>
-        <MaterialIcons name="arrow-back" size={24} color="white" />
-      </TouchableOpacity>
+    <Screen>
+      <Button
+        title="Back"
+        icon="arrow-back"
+        variant="outline"
+        size="small"
+        onPress={() => router.replace('/')}
+        style={styles.backButton}
+      />
 
       {params.imageUri && (
-        <Image 
-          source={{ uri: params.imageUri }} 
-          style={styles.image} 
-          resizeMode="contain"
-        />
+        <View style={styles.imageContainer}>
+          <Image 
+            source={{ uri: params.imageUri }} 
+            style={styles.image} 
+            resizeMode="cover"
+          />
+          <LinearGradient
+            colors={['rgba(0,0,0,0.8)', 'transparent']}
+            style={styles.imageOverlay}
+          />
+        </View>
       )}
       
-      <Text style={styles.title}>Analysis Results</Text>
+      <Text variant="h2" style={styles.title}>Analysis Results</Text>
       
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4a90e2" />
-          <Text style={styles.loadingText}>Analyzing image...</Text>
+          <LoadingIndicator text="Analyzing image..." />
         </View>
       ) : error ? (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity 
-            style={styles.button}
-            onPress={() => router.replace('/camera')}
-          >
-            <Text style={styles.buttonText}>Try Again</Text>
-          </TouchableOpacity>
+          <Card style={styles.errorCard}>
+            <Text variant="h3" color="error" center>
+              Error
+            </Text>
+            <Text variant="body" color="secondary" center style={styles.errorText}>
+              {error}
+            </Text>
+            <Button
+              title="Try Again"
+              onPress={() => router.replace('/camera')}
+              gradient
+            />
+          </Card>
         </View>
       ) : bottles.length === 0 ? (
         <View style={styles.noBottlesContainer}>
-          <Text style={styles.noBottlesText}>No bottles detected in the image</Text>
-          <TouchableOpacity 
-            style={styles.button}
-            onPress={() => router.replace('/camera')}
-          >
-            <Text style={styles.buttonText}>Take Another Photo</Text>
-          </TouchableOpacity>
+          <Card style={styles.messageCard}>
+            <Text variant="h3" center>
+              No Bottles Detected
+            </Text>
+            <Text variant="body" color="secondary" center style={styles.messageText}>
+              Try taking another photo with better lighting and positioning
+            </Text>
+            <Button
+              title="Take Another Photo"
+              onPress={() => router.replace('/camera')}
+              gradient
+            />
+          </Card>
         </View>
       ) : (
-        <View style={styles.resultsContainer}>
-          <Text style={styles.resultsTitle}>Detected Bottles:</Text>
-          {bottles.map((bottle, index) => (
-            <Text key={index} style={styles.bottleText}>• {bottle}</Text>
-          ))}
+        <Animated.ScrollView
+          style={styles.resultsContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <AnimatedCard
+            entering={FadeInUp.delay(200)}
+            style={styles.detectedBottlesCard}
+          >
+            <Text variant="h3">Detected Bottles</Text>
+            {bottles.map((bottle, index) => (
+              <Text
+                key={index}
+                variant="body"
+                color="secondary"
+                style={styles.bottleText}
+              >
+                • {bottle}
+              </Text>
+            ))}
+          </AnimatedCard>
 
           {recipes.length > 0 && (
             <>
-              <Text style={[styles.resultsTitle, styles.recipesTitle]}>
-                Possible Cocktails:
+              <Text variant="h3" style={styles.recipesTitle}>
+                Possible Cocktails
               </Text>
               {recipes.map((recipe, index) => (
-                <View key={index} style={styles.recipeCard}>
-                  <Text style={styles.recipeName}>{recipe.name}</Text>
-                  <Text style={styles.recipeSubtitle}>Ingredients:</Text>
+                <AnimatedCard
+                  key={index}
+                  entering={FadeInDown.delay(300 + index * 100)}
+                  style={styles.recipeCard}
+                >
+                  <Text variant="h3" style={styles.recipeName}>
+                    {recipe.name}
+                  </Text>
+                  
+                  <Text variant="label" color="accent" style={styles.recipeSubtitle}>
+                    Ingredients
+                  </Text>
                   {recipe.ingredients.map((ingredient, i) => (
-                    <Text key={i} style={styles.recipeText}>• {ingredient}</Text>
+                    <Text
+                      key={i}
+                      variant="body"
+                      color="secondary"
+                      style={styles.recipeText}
+                    >
+                      • {ingredient}
+                    </Text>
                   ))}
-                  <Text style={styles.recipeSubtitle}>Instructions:</Text>
+                  
+                  <Text variant="label" color="accent" style={styles.recipeSubtitle}>
+                    Instructions
+                  </Text>
                   {recipe.instructions.map((instruction, i) => (
-                    <Text key={i} style={styles.recipeText}>
+                    <Text
+                      key={i}
+                      variant="body"
+                      color="secondary"
+                      style={styles.recipeText}
+                    >
                       {i + 1}. {instruction}
                     </Text>
                   ))}
-                </View>
+                </AnimatedCard>
               ))}
             </>
           )}
 
-          <TouchableOpacity 
-            style={styles.button}
+          <Button
+            title="Take Another Photo"
             onPress={() => router.replace('/camera')}
-          >
-            <Text style={styles.buttonText}>Take Another Photo</Text>
-          </TouchableOpacity>
-        </View>
+            gradient
+            style={styles.bottomButton}
+          />
+        </Animated.ScrollView>
       )}
-    </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'black',
-  },
   backButton: {
     position: 'absolute',
-    top: 40,
-    left: 20,
+    top: theme.spacing.xl,
+    left: theme.spacing.lg,
     zIndex: 1,
+  },
+  imageContainer: {
+    height: 200,
+    marginHorizontal: -theme.layout.screenPadding,
+    marginBottom: theme.spacing.xl,
   },
   image: {
     width: '100%',
-    height: 200,
-    marginTop: 60,
-    marginBottom: 20,
+    height: '100%',
+  },
+  imageOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 100,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 20,
+    marginBottom: theme.spacing.xl,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 20,
-  },
-  loadingText: {
-    color: 'white',
-    fontSize: 16,
-    marginTop: 10,
   },
   errorContainer: {
-    padding: 20,
-    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.lg,
+  },
+  errorCard: {
+    gap: theme.spacing.lg,
   },
   errorText: {
-    color: '#ff6b6b',
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: 'center',
+    marginBottom: theme.spacing.md,
   },
   noBottlesContainer: {
-    padding: 20,
-    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.lg,
   },
-  noBottlesText: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 20,
-    textAlign: 'center',
+  messageCard: {
+    gap: theme.spacing.lg,
+  },
+  messageText: {
+    marginBottom: theme.spacing.md,
   },
   resultsContainer: {
-    padding: 20,
+    flex: 1,
   },
-  resultsTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 15,
-  },
-  recipesTitle: {
-    marginTop: 30,
+  detectedBottlesCard: {
+    marginBottom: theme.spacing.lg,
   },
   bottleText: {
-    fontSize: 16,
-    marginBottom: 10,
-    color: 'white',
+    marginTop: theme.spacing.xs,
+  },
+  recipesTitle: {
+    marginBottom: theme.spacing.lg,
   },
   recipeCard: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
+    marginBottom: theme.spacing.lg,
   },
   recipeName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 10,
+    marginBottom: theme.spacing.md,
   },
   recipeSubtitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#4a90e2',
-    marginTop: 10,
-    marginBottom: 5,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
   },
   recipeText: {
-    fontSize: 14,
-    color: 'white',
-    marginBottom: 5,
-    paddingLeft: 10,
+    marginBottom: theme.spacing.xs,
   },
-  button: {
-    backgroundColor: '#4a90e2',
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
+  bottomButton: {
+    marginBottom: theme.spacing.xl,
   },
 }); 

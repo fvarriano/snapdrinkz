@@ -1,8 +1,14 @@
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import Screen from './components/Screen';
+import Text from './components/Typography';
+import Button from './components/Button';
+import Card from './components/Card';
+import theme from './styles/theme';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function CameraScreen() {
   const [image, setImage] = useState<{ uri: string; base64: string | undefined } | null>(null);
@@ -55,93 +61,110 @@ export default function CameraScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={goBack}>
-        <MaterialIcons name="arrow-back" size={24} color="white" />
-      </TouchableOpacity>
+    <Screen useBlur>
+      <Button
+        title="Back"
+        icon="arrow-back"
+        variant="outline"
+        size="small"
+        onPress={goBack}
+        style={styles.backButton}
+      />
 
       {!image ? (
         <View style={styles.cameraPlaceholder}>
-          <TouchableOpacity style={styles.captureButton} onPress={takePicture}>
-            <MaterialIcons name="camera-alt" size={32} color="white" />
-            <Text style={styles.captureText}>Take Photo</Text>
-          </TouchableOpacity>
+          <Card blurEffect style={styles.instructionCard}>
+            <Text variant="h3" center style={styles.instructionTitle}>
+              Take a Photo
+            </Text>
+            <Text variant="body" color="secondary" center style={styles.instructionText}>
+              Position your bottles in frame and take a clear photo
+            </Text>
+          </Card>
+
+          <Button
+            title="Take Photo"
+            icon="camera-alt"
+            gradient
+            size="large"
+            onPress={takePicture}
+            style={styles.captureButton}
+          />
         </View>
       ) : (
         <View style={styles.previewContainer}>
           <Image source={{ uri: image.uri }} style={styles.preview} />
-          <View style={styles.previewButtons}>
-            <TouchableOpacity style={styles.button} onPress={handleRetake}>
-              <Text style={styles.buttonText}>Retake</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.button, styles.confirmButton]} 
-              onPress={handleConfirm}
-            >
-              <Text style={styles.buttonText}>Analyze</Text>
-            </TouchableOpacity>
-          </View>
+          
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.8)']}
+            style={styles.previewOverlay}
+          >
+            <View style={styles.previewButtons}>
+              <Button
+                title="Retake"
+                icon="refresh"
+                variant="outline"
+                onPress={handleRetake}
+              />
+              <Button
+                title="Analyze"
+                icon="check"
+                gradient
+                onPress={handleConfirm}
+              />
+            </View>
+          </LinearGradient>
         </View>
       )}
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'black',
-  },
   backButton: {
     position: 'absolute',
-    top: 40,
-    left: 20,
+    top: theme.spacing.xl,
+    left: theme.spacing.lg,
     zIndex: 1,
   },
   cameraPlaceholder: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: theme.spacing.lg,
+  },
+  instructionCard: {
+    width: '100%',
+    marginBottom: theme.spacing.xl,
+  },
+  instructionTitle: {
+    marginBottom: theme.spacing.md,
+  },
+  instructionText: {
+    opacity: 0.8,
   },
   captureButton: {
-    alignItems: 'center',
-    backgroundColor: '#4a90e2',
-    padding: 20,
-    borderRadius: 10,
-  },
-  captureText: {
-    color: 'white',
-    marginTop: 10,
-    fontSize: 16,
+    width: '100%',
   },
   previewContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    marginHorizontal: -theme.layout.screenPadding,
   },
   preview: {
     width: '100%',
-    height: '80%',
+    height: '100%',
+  },
+  previewOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: theme.spacing.xl,
+    paddingTop: theme.spacing.xxl * 2,
   },
   previewButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    padding: 20,
-  },
-  button: {
-    backgroundColor: '#4a90e2',
-    padding: 15,
-    borderRadius: 10,
-    marginHorizontal: 10,
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  confirmButton: {
-    backgroundColor: '#32cd32',
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
+    justifyContent: 'space-between',
+    gap: theme.spacing.md,
   },
 }); 
