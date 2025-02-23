@@ -12,21 +12,21 @@ interface Ingredient {
 const ingredients: Ingredient[] = [
   {
     name: "BOMBAY SAPPHIRE",
-    alternatives: ["GIN", "BOMBAY", "SAPPHIRE GIN"]
+    alternatives: ["GIN", "BOMBAY", "SAPPHIRE GIN", "LONDON DRY GIN"]
   },
   {
     name: "MARTINI",
-    alternatives: ["MARTINI ROSSO", "SWEET VERMOUTH", "RED VERMOUTH"]
+    alternatives: ["MARTINI ROSSO", "SWEET VERMOUTH", "RED VERMOUTH", "VERMOUTH"]
   },
   {
     name: "MCGUINNESS",
-    alternatives: ["BLUE CURACAO", "CURACAO"]
+    alternatives: ["BLUE CURACAO", "CURACAO", "MCGUINNESS BLUE CURACAO"]
   }
 ];
 
 const cocktailRecipes: CocktailRecipe[] = [
   {
-    name: "Martini",
+    name: "Classic Martini",
     ingredients: ["BOMBAY SAPPHIRE", "MARTINI"],
     instructions: [
       "Fill a mixing glass with ice",
@@ -47,6 +47,44 @@ const cocktailRecipes: CocktailRecipe[] = [
       "Add 4 oz lemonade",
       "Stir gently",
       "Garnish with a lemon wheel"
+    ]
+  },
+  {
+    name: "Blue Moon",
+    ingredients: ["BOMBAY SAPPHIRE", "MCGUINNESS"],
+    instructions: [
+      "Fill a cocktail glass with ice",
+      "Add 2 oz Bombay Sapphire gin",
+      "Add 0.5 oz Blue Curacao",
+      "Add 0.5 oz fresh lemon juice",
+      "Shake well with ice",
+      "Strain into a chilled cocktail glass",
+      "Garnish with a lemon twist"
+    ]
+  },
+  {
+    name: "Perfect Martini",
+    ingredients: ["BOMBAY SAPPHIRE", "MARTINI"],
+    instructions: [
+      "Fill a mixing glass with ice",
+      "Add 2 oz Bombay Sapphire gin",
+      "Add 0.5 oz sweet vermouth",
+      "Add 0.5 oz dry vermouth",
+      "Stir until well-chilled",
+      "Strain into a chilled cocktail glass",
+      "Garnish with a lemon twist"
+    ]
+  },
+  {
+    name: "Sapphire Negroni",
+    ingredients: ["BOMBAY SAPPHIRE", "MARTINI"],
+    instructions: [
+      "Fill a rocks glass with ice",
+      "Add 1 oz Bombay Sapphire gin",
+      "Add 1 oz sweet vermouth",
+      "Add 1 oz Campari",
+      "Stir until well-chilled",
+      "Garnish with an orange peel"
     ]
   }
 ];
