@@ -38,6 +38,12 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
+              name="recipe-details"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
               name="auth/sign-in"
               options={{
                 animation: 'fade',

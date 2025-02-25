@@ -25,22 +25,51 @@ const FavoritesContext = createContext<FavoritesContextType | undefined>(undefin
 export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const [favorites, setFavorites] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentSession, setCurrentSession] = useState<Session | null>(null);
 
+  // Listen for auth changes
   useEffect(() => {
-    fetchFavorites();
-    
-    // Subscribe to changes
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCurrentSession(session);
+      if (session) {
+        fetchFavorites(session);
+      } else {
+        setFavorites([]);
+        setLoading(false);
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentSession(session);
+      if (session) {
+        fetchFavorites(session);
+      } else {
+        setFavorites([]);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Subscribe to realtime changes
+  useEffect(() => {
+    if (!currentSession?.user) return;
+
     const channel = supabase
-      .channel('favorites_changes')
+      .channel(`user_favorites_${currentSession.user.id}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'favorites'
+          table: 'favorites',
+          filter: `user_id=eq.${currentSession.user.id}`,
         },
         () => {
-          fetchFavorites();
+          fetchFavorites(currentSession);
         }
       )
       .subscribe();
@@ -48,21 +77,15 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [currentSession?.user?.id]);
 
-  async function fetchFavorites() {
+  async function fetchFavorites(session: Session) {
     try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) {
-        console.log('No user session found');
-        setFavorites([]);
-        return;
-      }
-
+      setLoading(true);
       const { data, error } = await supabase
         .from('favorites')
         .select('*')
-        .eq('user_id', session.session.user.id)
+        .eq('user_id', session.user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -70,6 +93,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
       
+      console.log('Fetched favorites:', data?.length || 0);
       setFavorites(data || []);
     } catch (error) {
       console.error('Error in fetchFavorites:', error);
@@ -80,12 +104,11 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function addFavorite(recipe: Omit<Recipe, 'id' | 'created_at'>) {
-    try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) {
-        throw new Error('No user session found');
-      }
+    if (!currentSession?.user) {
+      throw new Error('Must be logged in to add favorites');
+    }
 
+    try {
       // Check if recipe already exists
       if (isFavorite(recipe.name)) {
         console.log('Recipe already in favorites');
@@ -96,7 +119,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         .from('favorites')
         .insert([
           {
-            user_id: session.session.user.id,
+            user_id: currentSession.user.id,
             name: recipe.name,
             ingredients: recipe.ingredients,
             instructions: recipe.instructions,
@@ -112,7 +135,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
       }
 
       console.log('Successfully added favorite:', data);
-      await fetchFavorites();
+      await fetchFavorites(currentSession);
     } catch (error) {
       console.error('Error in addFavorite:', error);
       throw error;
@@ -120,16 +143,15 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function removeFavorite(recipeName: string) {
-    try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) {
-        throw new Error('No user session found');
-      }
+    if (!currentSession?.user) {
+      throw new Error('Must be logged in to remove favorites');
+    }
 
+    try {
       const { error } = await supabase
         .from('favorites')
         .delete()
-        .eq('user_id', session.session.user.id)
+        .eq('user_id', currentSession.user.id)
         .eq('name', recipeName);
 
       if (error) {
@@ -137,7 +159,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
 
-      await fetchFavorites();
+      await fetchFavorites(currentSession);
     } catch (error) {
       console.error('Error in removeFavorite:', error);
       throw error;

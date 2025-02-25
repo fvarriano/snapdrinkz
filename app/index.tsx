@@ -1,23 +1,20 @@
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, TextInput, StatusBar, TouchableOpacity } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useFavorites } from '../contexts/FavoritesContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import Screen from './components/Screen';
 import Text from './components/Typography';
 import Button from './components/Button';
-import Card from './components/Card';
 import LoadingIndicator from './components/LoadingIndicator';
+import CocktailListItem from './components/CocktailListItem';
 import theme from './styles/theme';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-
-const AnimatedCard = Animated.createAnimatedComponent(Card);
 
 export default function HomeScreen() {
   const { session, signOut, loading: authLoading } = useAuth();
-  const { favorites, loading: favoritesLoading } = useFavorites();
+  const { favorites, loading: favoritesLoading, removeFavorite } = useFavorites();
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!authLoading && !session) {
@@ -25,9 +22,14 @@ export default function HomeScreen() {
     }
   }, [session, authLoading]);
 
+  const filteredFavorites = favorites.filter(recipe =>
+    recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (authLoading) {
     return (
       <Screen>
+        <StatusBar barStyle="light-content" />
         <View style={styles.loadingContainer}>
           <LoadingIndicator text="Loading..." />
         </View>
@@ -41,215 +43,189 @@ export default function HomeScreen() {
 
   return (
     <Screen>
-      <ScrollView 
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-      >
-        <LinearGradient
-          colors={theme.colors.gradients.primary}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
+      <StatusBar barStyle="light-content" />
+      <View style={styles.header}>
+        <Text variant="h1" style={styles.title}>Cocktails</Text>
+        <TouchableOpacity 
+          style={styles.profileButton}
+          onPress={async () => {
+            try {
+              await signOut();
+              router.replace('/auth/sign-in');
+            } catch (error) {
+              console.error('Error signing out:', error);
+            }
+          }}
         >
-          <View style={styles.logoContainer}>
-            <MaterialIcons
-              name="local-bar"
-              size={48}
-              color={theme.colors.text.primary}
+          <Ionicons name="person" size={20} color={theme.colors.text.primary} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.searchContainer}>
+        <View style={styles.searchInputContainer}>
+          <Ionicons name="search" size={20} color={theme.colors.text.secondary} style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search cocktails"
+            placeholderTextColor={theme.colors.text.secondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+      </View>
+
+      <ScrollView 
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentContainer}
+      >
+        {favoritesLoading ? (
+          <LoadingIndicator />
+        ) : filteredFavorites.length === 0 && !searchQuery ? (
+          <View style={styles.emptyState}>
+            <MaterialIcons name="local-bar" size={48} color={theme.colors.text.secondary} />
+            <Text variant="body" color="secondary" center style={styles.emptyText}>
+              No favorite cocktails yet.{'\n'}
+              Take a photo to discover recipes!
+            </Text>
+            <Button
+              title="Take a Photo"
+              icon="camera-alt"
+              onPress={() => router.push('/camera')}
+              gradient
             />
           </View>
-          <Text variant="h1" center style={styles.title}>
-            SnapDrinkz
-          </Text>
-          <Text
-            variant="body"
-            color="secondary"
-            center
-            style={styles.subtitle}
-          >
-            Your Personal Mixologist
-          </Text>
-        </LinearGradient>
-
-        <View style={styles.content}>
-          <Button
-            title="Snap Your Bottles"
-            icon="camera-alt"
-            onPress={() => router.replace('/camera')}
-            gradient
-            size="large"
-            style={styles.mainButton}
-          />
-
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Ionicons 
-                name="bookmark" 
-                size={24} 
-                color={theme.colors.accent}
-              />
-              <Text variant="h2" style={styles.sectionTitle}>
-                Favorite Recipes
-              </Text>
-            </View>
-
-            {favoritesLoading ? (
-              <LoadingIndicator />
-            ) : favorites.length === 0 ? (
-              <Card style={styles.emptyCard}>
-                <Ionicons 
-                  name="heart-outline" 
-                  size={32} 
-                  color={theme.colors.text.secondary}
-                />
-                <Text 
-                  variant="body" 
-                  color="secondary" 
-                  center 
-                  style={styles.emptyText}
-                >
-                  No favorite recipes yet.{'\n'}
-                  Take a photo to discover cocktails!
-                </Text>
-              </Card>
-            ) : (
-              <View style={styles.favoritesGrid}>
-                {favorites.map((recipe, index) => (
-                  <AnimatedCard
-                    key={recipe.id}
-                    entering={FadeInDown.delay(index * 100)}
-                    style={styles.recipeCard}
-                    onPress={() => {
-                      // TODO: Navigate to recipe details
-                    }}
-                  >
-                    <View style={styles.recipeHeader}>
-                      <MaterialIcons
-                        name="local-bar"
-                        size={24}
-                        color={theme.colors.accent}
-                      />
-                      <Text variant="h3" style={styles.recipeName}>
-                        {recipe.name}
-                      </Text>
-                    </View>
-                    <Text 
-                      variant="caption" 
-                      color="secondary" 
-                      style={styles.recipeIngredients}
-                    >
-                      {recipe.ingredients.join(', ')}
-                    </Text>
-                  </AnimatedCard>
-                ))}
-              </View>
-            )}
+        ) : filteredFavorites.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text variant="body" color="secondary" center>
+              No cocktails found matching "{searchQuery}"
+            </Text>
           </View>
-        </View>
+        ) : (
+          <View style={styles.list}>
+            {filteredFavorites.map((recipe, index) => (
+              <CocktailListItem
+                key={recipe.id || index}
+                name={recipe.name}
+                strength="Strong"
+                imageUrl={recipe.image_url}
+                isFavorite={true}
+                isHighlighted={index === 0}
+                onPress={() => {
+                  // Navigate to recipe details
+                  router.push({
+                    pathname: '/recipe-details',
+                    params: {
+                      name: recipe.name,
+                      ingredients: JSON.stringify(recipe.ingredients),
+                      instructions: JSON.stringify(recipe.instructions),
+                      imageUrl: recipe.image_url || '',
+                      isFavorite: 'true'
+                    }
+                  });
+                }}
+                onFavoritePress={() => {
+                  // Handle unfavorite
+                  removeFavorite(recipe.name);
+                }}
+              />
+            ))}
+          </View>
+        )}
       </ScrollView>
 
-      <Button
-        title="Sign Out"
-        icon="logout"
-        variant="outline"
-        onPress={async () => {
-          try {
-            await signOut();
-            router.replace('/auth/sign-in');
-          } catch (error) {
-            console.error('Error signing out:', error);
-          }
-        }}
-        style={styles.signOutButton}
-      />
+      <View style={styles.fabContainer}>
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => router.push('/camera')}
+        >
+          <Ionicons name="camera" size={24} color={theme.colors.text.primary} />
+        </TouchableOpacity>
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
+  header: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: theme.colors.text.primary,
+  },
+  profileButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.background.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background.card,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
     flex: 1,
+    height: 44,
+    fontSize: 16,
+    color: theme.colors.text.primary,
+  },
+  content: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 100,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  header: {
-    paddingVertical: theme.spacing.xl,
-    marginHorizontal: -theme.layout.screenPadding,
-    paddingHorizontal: theme.layout.screenPadding,
-    borderBottomLeftRadius: theme.borderRadius.xxl,
-    borderBottomRightRadius: theme.borderRadius.xxl,
-    ...theme.shadows.large,
-  },
-  logoContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: theme.borderRadius.round,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    marginBottom: theme.spacing.md,
-    ...theme.shadows.medium,
-  },
-  title: {
-    marginBottom: theme.spacing.xs,
-    fontSize: 36,
-    fontWeight: theme.typography.weights.bold,
-  },
-  subtitle: {
-    opacity: 0.8,
-    letterSpacing: 1,
-  },
-  content: {
+  emptyState: {
     flex: 1,
-    paddingTop: theme.spacing.xl,
-  },
-  mainButton: {
-    marginBottom: theme.spacing.xl,
-  },
-  section: {
-    marginBottom: theme.spacing.xl,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: theme.spacing.lg,
-    gap: theme.spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: theme.typography.sizes.lg,
-  },
-  emptyCard: {
-    alignItems: 'center',
-    padding: theme.spacing.xl,
-    gap: theme.spacing.md,
+    gap: 16,
+    paddingVertical: 32,
   },
   emptyText: {
     textAlign: 'center',
-    lineHeight: 24,
+    marginBottom: 16,
   },
-  favoritesGrid: {
-    gap: theme.spacing.md,
+  list: {
+    paddingTop: 8,
+    gap: 12,
   },
-  recipeCard: {
-    padding: theme.spacing.lg,
+  fabContainer: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
   },
-  recipeHeader: {
-    flexDirection: 'row',
+  fab: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: theme.colors.accent,
     alignItems: 'center',
-    gap: theme.spacing.sm,
-    marginBottom: theme.spacing.xs,
-  },
-  recipeName: {
-    flex: 1,
-  },
-  recipeIngredients: {
-    marginTop: theme.spacing.xs,
-  },
-  signOutButton: {
-    marginTop: theme.spacing.md,
+    justifyContent: 'center',
+    ...theme.shadows.medium,
   },
 }); 
