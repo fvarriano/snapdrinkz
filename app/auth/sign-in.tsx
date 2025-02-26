@@ -1,25 +1,39 @@
-import { useState } from 'react';
-import { View, TextInput, StyleSheet, Text, TouchableOpacity, KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
+import { useState, useRef } from 'react';
+import { View, TextInput, StyleSheet, Text, TouchableOpacity, KeyboardAvoidingView, Platform, StatusBar, ActivityIndicator } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import MartiniIcon from '../components/MartiniIcon';
 import { BlurView } from 'expo-blur';
 import theme from '../styles/theme';
+import * as Haptics from 'expo-haptics';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { signIn } = useAuth();
+  const passwordRef = useRef<TextInput>(null);
 
   const handleSignIn = async () => {
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+
     try {
       setError('');
+      setIsSubmitting(true);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       await signIn(email, password);
       router.replace('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -55,27 +69,41 @@ export default function SignIn() {
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
+              returnKeyType="next"
+              onSubmitEditing={() => passwordRef.current?.focus()}
+              blurOnSubmit={false}
+              autoComplete="email"
             />
             
             <TextInput
+              ref={passwordRef}
               style={styles.input}
               placeholder="Password"
               placeholderTextColor={theme.colors.text.secondary}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
+              returnKeyType="go"
+              onSubmitEditing={handleSignIn}
+              autoComplete="password"
             />
             
             <TouchableOpacity 
-              style={styles.signInButton} 
+              style={[styles.signInButton, isSubmitting && styles.signInButtonDisabled]} 
               onPress={handleSignIn}
+              disabled={isSubmitting}
             >
-              <Text style={styles.signInButtonText}>Sign In</Text>
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="#000000" />
+              ) : (
+                <Text style={styles.signInButtonText}>Sign In</Text>
+              )}
             </TouchableOpacity>
             
             <TouchableOpacity 
               style={styles.createAccountButton}
               onPress={() => router.push('/auth/sign-up')}
+              disabled={isSubmitting}
             >
               <Text style={styles.createAccountText}>Create Account</Text>
             </TouchableOpacity>
@@ -171,5 +199,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 14,
     fontWeight: '500',
+  },
+  signInButtonDisabled: {
+    opacity: 0.7,
   },
 }); 

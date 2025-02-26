@@ -1,3 +1,5 @@
+import { Recipe } from '../contexts/FavoritesContext';
+
 interface CocktailRecipe {
   name: string;
   ingredients: string[];
@@ -176,6 +178,67 @@ const cocktailRecipes: CocktailRecipe[] = [
       "Stir gently",
       "Garnish with a lemon wheel"
     ]
+  },
+  {
+    name: "Mojito",
+    ingredients: ["RUM"],
+    instructions: [
+      "Muddle 6-8 mint leaves with 0.5 oz simple syrup in a highball glass",
+      "Add 2 oz white rum",
+      "Add 0.75 oz fresh lime juice",
+      "Fill glass with crushed ice",
+      "Top with soda water",
+      "Garnish with mint sprig and lime wheel"
+    ]
+  },
+  {
+    name: "Daiquiri",
+    ingredients: ["RUM"],
+    instructions: [
+      "Add 2 oz white rum to a shaker",
+      "Add 1 oz fresh lime juice",
+      "Add 0.75 oz simple syrup",
+      "Fill with ice and shake well",
+      "Strain into a chilled coupe glass",
+      "Garnish with a lime wheel"
+    ]
+  },
+  {
+    name: "Piña Colada",
+    ingredients: ["RUM"],
+    instructions: [
+      "Add 2 oz white rum to a blender",
+      "Add 1.5 oz cream of coconut",
+      "Add 1.5 oz pineapple juice",
+      "Add 0.5 cup crushed ice",
+      "Blend until smooth",
+      "Pour into a hurricane glass",
+      "Garnish with pineapple wedge and cherry"
+    ]
+  },
+  {
+    name: "Dark 'n Stormy",
+    ingredients: ["RUM"],
+    instructions: [
+      "Fill a highball glass with ice",
+      "Add 2 oz dark rum",
+      "Top with 4-5 oz ginger beer",
+      "Garnish with a lime wedge"
+    ]
+  },
+  {
+    name: "Mai Tai",
+    ingredients: ["RUM"],
+    instructions: [
+      "Add 1 oz dark rum to a shaker",
+      "Add 1 oz white rum",
+      "Add 0.5 oz orange curaçao",
+      "Add 0.5 oz orgeat syrup",
+      "Add 0.25 oz simple syrup",
+      "Add 1 oz fresh lime juice",
+      "Shake with ice and strain into a rocks glass filled with crushed ice",
+      "Garnish with mint sprig and lime wheel"
+    ]
   }
 ];
 
@@ -220,4 +283,133 @@ export function findCocktails(detectedBottles: string[]): CocktailRecipe[] {
   }
 
   return matchingCocktails;
+}
+
+export function findMoreCocktails(detectedBottles: string[], existingRecipeNames: string[]): CocktailRecipe[] {
+  // Normalize detected bottle names
+  const normalizedBottles = detectedBottles.map(bottle => 
+    bottle.toUpperCase()
+  );
+
+  // Find available ingredients
+  const availableIngredients = ingredients.filter(ing => 
+    normalizedBottles.some(bottle => 
+      [ing.name, ...ing.alternatives].some(alt => 
+        bottle.includes(alt)
+      )
+    )
+  ).map(ing => ing.name);
+
+  // If McGuinness is detected, make sure it's included
+  if (normalizedBottles.some(bottle => bottle.includes('MCGUINNESS') || bottle.includes('ILLVA'))) {
+    if (!availableIngredients.includes('MCGUINNESS')) {
+      availableIngredients.push('MCGUINNESS');
+    }
+  }
+
+  // Find additional cocktails that match at least one ingredient but weren't in the original results
+  const additionalCocktails = cocktailRecipes.filter(recipe => 
+    !existingRecipeNames.includes(recipe.name) && // Exclude recipes we've already shown
+    recipe.ingredients.some(ingredient => 
+      availableIngredients.includes(ingredient)
+    )
+  );
+
+  // Sort by number of matching ingredients (most matches first)
+  additionalCocktails.sort((a, b) => {
+    const aMatches = a.ingredients.filter(ingredient => availableIngredients.includes(ingredient)).length;
+    const bMatches = b.ingredients.filter(ingredient => availableIngredients.includes(ingredient)).length;
+    return bMatches - aMatches;
+  });
+
+  // Return up to 3 additional recipes
+  return additionalCocktails.slice(0, 3);
+}
+
+export function getRecommendedCocktails(favorites: Recipe[], searchQuery: string = ''): CocktailRecipe[] {
+  // If we have a search query, prioritize finding recipes that match the query
+  if (searchQuery) {
+    const normalizedQuery = searchQuery.toUpperCase();
+    
+    // Find the ingredient that matches the search query
+    const matchingIngredients = ingredients.filter(ing => 
+      ing.name.includes(normalizedQuery) || 
+      ing.alternatives.some(alt => alt.includes(normalizedQuery))
+    );
+    
+    // Get the standardized ingredient names that match the query
+    const matchingIngredientNames = matchingIngredients.map(ing => ing.name);
+    
+    // Find recipes that use any of the matching ingredients
+    let matchingRecipes = cocktailRecipes.filter(recipe => 
+      recipe.ingredients.some(ingredient => 
+        matchingIngredientNames.includes(ingredient)
+      )
+    );
+    
+    // Also check recipe names
+    const nameMatchingRecipes = cocktailRecipes.filter(recipe => 
+      recipe.name.toUpperCase().includes(normalizedQuery)
+    );
+    
+    // Combine and remove duplicates
+    matchingRecipes = [...new Set([...matchingRecipes, ...nameMatchingRecipes])];
+    
+    // Filter out favorites
+    const favoriteNames = new Set(favorites.map(fav => fav.name));
+    matchingRecipes = matchingRecipes.filter(recipe => !favoriteNames.has(recipe.name));
+    
+    // Return up to 5 matching recipes
+    return matchingRecipes.slice(0, 5);
+  }
+  
+  // If no search query, proceed with the original recommendation logic
+  // If no favorites, return a few random recipes
+  if (favorites.length === 0) {
+    return [...cocktailRecipes]
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 3);
+  }
+  
+  // Extract ingredients from favorites
+  const favoriteIngredients = new Set<string>();
+  favorites.forEach(favorite => {
+    favorite.ingredients.forEach(ingredient => {
+      // Normalize ingredient names
+      const normalizedIngredient = ingredient.toUpperCase();
+      ingredients.forEach(ing => {
+        if ([ing.name, ...ing.alternatives].some(alt => 
+          normalizedIngredient.includes(alt)
+        )) {
+          favoriteIngredients.add(ing.name);
+        }
+      });
+    });
+  });
+  
+  // Get favorite recipe names for exclusion
+  const favoriteNames = new Set(favorites.map(fav => fav.name));
+  
+  // Find recipes that use similar ingredients but aren't in favorites
+  let recommendations = cocktailRecipes.filter(recipe => {
+    // Skip recipes already in favorites
+    if (favoriteNames.has(recipe.name)) {
+      return false;
+    }
+    
+    // Check if recipe uses any favorite ingredients
+    return recipe.ingredients.some(ingredient => 
+      favoriteIngredients.has(ingredient)
+    );
+  });
+  
+  // Sort by number of matching ingredients (most matches first)
+  recommendations.sort((a, b) => {
+    const aMatches = a.ingredients.filter(ingredient => favoriteIngredients.has(ingredient)).length;
+    const bMatches = b.ingredients.filter(ingredient => favoriteIngredients.has(ingredient)).length;
+    return bMatches - aMatches;
+  });
+  
+  // Return up to 5 recommendations
+  return recommendations.slice(0, 5);
 } 
